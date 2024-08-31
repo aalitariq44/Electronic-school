@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "444455293499",
+    "firebase_url": "https://maryamschools04-default-rtdb.firebaseio.com",
+    "project_id": "maryamschools04",
+    "storage_bucket": "maryamschools04.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444455293499:android:948284bbede4a8e3ee421e",
+        "android_client_info": {
+          "package_name": "com.example.maryam_schools_for_users"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk9liHUOnD74JDhDp_yzqQO0pBuOxfCtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:444455293499:android:d49894e0a4e880eeee421e",
+        "android_client_info": {
+          "package_name": "com.example.to_users"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDk9liHUOnD74JDhDp_yzqQO0pBuOxfCtE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

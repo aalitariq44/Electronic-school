@@ -1,0 +1,31 @@
+{
+    "flutter": {
+        "platforms": {
+            "android": {
+                "default": {
+                    "projectId": "maryamschools04",
+                    "appId": "1:444455293499:android:d49894e0a4e880eeee421e",
+                    "fileOutput": "android/app/google-services.json"
+                }
+            },
+            "dart": {
+                "lib/firebase_options.dart": {
+                    "projectId": "maryamschools04",
+                    "configurations": {
+                        "android": "1:444455293499:android:d49894e0a4e880eeee421e",
+                        "ios": "1:444455293499:ios:bccf983cd138aa8cee421e",
+                        "web": "1:444455293499:web:0786c9ed7bc64bb6ee421e"
+                    }
+                }
+            }
+        }
+    },
+    "firestore": {
+        "rules": "firestore.rules",
+        "indexes": "firestore.indexes.json"
+    },
+    "hosting": {
+        "site": "myschool4",
+        "public": "build/web"
+    }
+}
