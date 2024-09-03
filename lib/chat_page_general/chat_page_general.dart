@@ -166,6 +166,7 @@ class _ChatPageState extends State<ChatPage> {
         onUploadFile: _uploadFile,
         primaryColor: Colors.blue,
         secondaryColor: Colors.grey[300]!,
+        myName: '',
       ),
     );
   }

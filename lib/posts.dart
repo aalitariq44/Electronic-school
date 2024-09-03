@@ -279,7 +279,9 @@ class _PostsPageState extends State<PostsPage> {
             highlightColor: Colors.white,
             renderBorder: true,
           ),
-          SizedBox(width: 4,)
+          SizedBox(
+            width: 4,
+          )
         ],
       ),
       body: RefreshIndicator(
@@ -363,7 +365,7 @@ class _PostsPageState extends State<PostsPage> {
               ),
             ),
             subtitle: Text(
-              '${userData['schoolId'] == '49937465' ? 'نور الخليج الأهلية' : userData['schoolId'] == '69329646' ? 'مريم للصفوف التكميلية' : userData['schoolId'] ?? 'جاري التحميل...'} • ${userData['type'] ?? ''} • ${_formatDate(data['date'])}',
+              '${userData['schoolId'] == '49937465' ? 'نور الخليج الأهلية' : userData['schoolId'] == '69329646' ? 'مريم للصفوف التكميلية' : userData['schoolId'] == '02702009' ? 'ثانوية الخليج الأهلية' : userData['schoolId'] ?? 'مدرسة غير معروفة'} • ${userData['type'] ?? ''} • ${_formatDate(data['date'])}',
               style: TextStyle(fontSize: 12),
             ),
             trailing: isCurrentUserPost

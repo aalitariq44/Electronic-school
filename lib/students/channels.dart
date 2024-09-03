@@ -68,6 +68,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         {'name': 'اللغة الانكليزية', 'icon': FontAwesomeIcons.language},
         {'name': 'الرياضيات', 'icon': FontAwesomeIcons.squareRootAlt},
         {'name': 'العلوم', 'icon': FontAwesomeIcons.atom},
+        {'name': 'الإدارة', 'icon': FontAwesomeIcons.building}
       ];
     } else if (_studentGrade == 'الرابع الابتدائي' ||
         _studentGrade == 'الخامس الابتدائي' ||
@@ -79,6 +80,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         {'name': 'الرياضيات', 'icon': FontAwesomeIcons.squareRootAlt},
         {'name': 'العلوم', 'icon': FontAwesomeIcons.atom},
         {'name': 'الاجتماعيات', 'icon': FontAwesomeIcons.globeAmericas},
+        {'name': 'الإدارة', 'icon': FontAwesomeIcons.building}
       ];
     } else if (_studentGrade == 'الاول المتوسط' ||
         _studentGrade == 'الثاني المتوسط' ||
@@ -92,6 +94,7 @@ class _SubjectsScreenState extends State<SubjectsScreen> {
         {'name': 'الكيمياء', 'icon': FontAwesomeIcons.flask},
         {'name': 'الاحياء', 'icon': FontAwesomeIcons.dna},
         {'name': 'الاجتماعيات', 'icon': FontAwesomeIcons.globeAmericas},
+        {'name': 'الإدارة', 'icon': FontAwesomeIcons.building}
       ];
     }
   }

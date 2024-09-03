@@ -9,7 +9,6 @@ import 'package:to_users/custom_drawer.dart';
 import 'package:to_users/discussion.dart';
 import 'package:to_users/gemini.dart';
 import 'package:to_users/login/login.dart';
-import 'package:to_users/meeting.dart';
 import 'package:to_users/notes/all_notes.dart';
 import 'package:to_users/personal/personal_page.dart';
 import 'package:to_users/points/points.dart';
@@ -18,6 +17,7 @@ import 'package:to_users/tasks/tasks.dart';
 import 'package:to_users/techers/chat/teacher_subjects_page.dart';
 import 'package:to_users/techers/display_students.dart';
 import 'package:to_users/techers/grads/teacher_subjects_page.dart';
+import 'package:to_users/techers/meeting.dart';
 import 'package:to_users/the_book.dart';
 import 'package:to_users/the_table.dart';
 import 'package:to_users/translate.dart';
@@ -31,7 +31,7 @@ class HomePageTeachers extends StatefulWidget {
 class _HomePageTeachersState extends State<HomePageTeachers> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final UpdateCheckerService _updateChecker = UpdateCheckerService(
-      currentVersion: '1.0.0'); // استبدل بإصدار تطبيقك الحالي
+      currentVersion: '1.1.0'); // استبدل بإصدار تطبيقك الحالي
 
   User? user = FirebaseAuth.instance.currentUser;
   String studentName = '';
@@ -383,6 +383,7 @@ class _HomePageTeachersState extends State<HomePageTeachers> {
                     myUid: myUid,
                     otherUserUid: '',
                     otherUserName: 'الإجتماع',
+                    myName: studentName,
                   ),
                 ),
               );
@@ -398,6 +399,7 @@ class _HomePageTeachersState extends State<HomePageTeachers> {
                     myUid: myUid,
                     otherUserUid: '',
                     otherUserName: 'المناقشة',
+                    myName: studentName,
                   ),
                 ),
               );

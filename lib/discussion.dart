@@ -9,6 +9,7 @@ import 'package:to_users/chat_interface.dart';
 class Discussion extends StatefulWidget {
   final String schoolId;
   final String myUid;
+  final String myName;
   final String otherUserUid;
   final String otherUserName;
 
@@ -18,6 +19,7 @@ class Discussion extends StatefulWidget {
     required this.myUid,
     required this.otherUserUid,
     required this.otherUserName,
+    required this.myName,
   }) : super(key: key);
 
   @override
@@ -92,6 +94,7 @@ class _DiscussionState extends State<Discussion> {
       'timestamp': FieldValue.serverTimestamp(),
       'type': type,
       'status': 'sent',
+      'senderName': widget.myName,
     };
 
     await _firestore
@@ -158,6 +161,7 @@ class _DiscussionState extends State<Discussion> {
         onUploadFile: _uploadFile,
         primaryColor: Colors.deepPurple,
         secondaryColor: Colors.grey[300]!,
+        myName: widget.myName,
       ),
     );
   }

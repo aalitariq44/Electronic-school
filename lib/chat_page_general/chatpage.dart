@@ -335,7 +335,7 @@ class _ChatSearchPageState extends State<ChatSearchPage> {
                 style: TextStyle(fontFamily: 'Cairo-Medium', fontSize: 14),
               ),
               subtitle: Text(
-                '${user['schoolId'] == '49937465' ? 'نور الخليج الأهلية' : user['schoolId'] == '69329646' ? 'مريم للصفوف التكميلية' : user['schoolId'] ?? 'جاري التحميل...'} • ${user['type'] ?? ''}',
+                '${user['schoolId'] == '49937465' ? 'نور الخليج الأهلية' : user['schoolId'] == '69329646' ? 'مريم للصفوف التكميلية' : user['schoolId'] == '02702009' ? 'ثانوية الخليج الأهلية' : user['schoolId'] ?? 'مدرسة غير معروفة'} • ${user['type'] ?? ''}',
                 style: TextStyle(fontSize: 12),
               ),
               trailing: FaIcon(FontAwesomeIcons.comment,

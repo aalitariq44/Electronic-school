@@ -19,11 +19,48 @@ class PersonalPage extends StatefulWidget {
 class _PersonalPageState extends State<PersonalPage> {
   Map<String, dynamic> studentData = {};
   bool isLoading = true;
+  Map<String, int> absenceData = {};
 
   @override
   void initState() {
     super.initState();
-    fetchStudentData();
+    fetchStudentData().then((_) {
+      if (studentData['type'] == 'student') {
+        fetchAbsenceData();
+      } else {
+        setState(() {}); // لتحديث الواجهة بعد جلب بيانات المدرس
+      }
+    });
+  }
+
+  Future<void> fetchAbsenceData() async {
+    if (studentData['type'] == 'student') {
+      QuerySnapshot absenceSnapshot = await FirebaseFirestore.instance
+          .collection('absences')
+          .where('studentId', isEqualTo: widget.userUid)
+          .get();
+
+      int absenceDays = 0;
+      int leaveDays = 0;
+      int escapeDays = 0;
+
+      for (var doc in absenceSnapshot.docs) {
+        String type = doc['absenceType'];
+        if (type == 'غياب')
+          absenceDays++;
+        else if (type == 'إجازة')
+          leaveDays++;
+        else if (type == 'هروب') escapeDays++;
+      }
+
+      setState(() {
+        absenceData = {
+          'absenceDays': absenceDays,
+          'leaveDays': leaveDays,
+          'escapeDays': escapeDays,
+        };
+      });
+    }
   }
 
   Future<void> fetchStudentData() async {
@@ -153,8 +190,112 @@ class _PersonalPageState extends State<PersonalPage> {
           style:
               TextStyle(fontSize: 18, color: Colors.grey, fontFamily: 'Cairo'),
         ),
+        SizedBox(height: 16),
+        _buildAbsenceInfo(),
       ],
     );
+  }
+
+  Widget _buildAbsenceInfo() {
+    if (studentData['type'] == 'teacher') {
+      int absenceDays = studentData['absenceDays'] ?? 0;
+      int leaveDays = studentData['leaveDays'] ?? 0;
+      List<dynamic> absenceRecords = studentData['absenceRecords'] ?? [];
+      List<dynamic> leaveRecords = studentData['leaveRecords'] ?? [];
+
+      return Card(
+        elevation: 4,
+        margin: EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'معلومات الغياب والإجازة',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                    fontFamily: 'Cairo'),
+              ),
+              Divider(),
+              Text(
+                'عدد أيام الغياب: $absenceDays',
+                style: TextStyle(fontSize: 16, fontFamily: 'Cairo'),
+              ),
+              Text(
+                'عدد أيام الإجازة: $leaveDays',
+                style: TextStyle(fontSize: 16, fontFamily: 'Cairo'),
+              ),
+              SizedBox(height: 8),
+              Text(
+                'سجلات الغياب:',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo'),
+              ),
+              ...absenceRecords.map((date) => Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Text('• $date',
+                        style: TextStyle(fontSize: 14, fontFamily: 'Cairo')),
+                  )),
+              SizedBox(height: 8),
+              Text(
+                'سجلات الإجازة:',
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Cairo'),
+              ),
+              ...leaveRecords.map((date) => Padding(
+                    padding: EdgeInsets.only(left: 16),
+                    child: Text('• $date',
+                        style: TextStyle(fontSize: 14, fontFamily: 'Cairo')),
+                  )),
+            ],
+          ),
+        ),
+      );
+    } else if (studentData['type'] == 'student') {
+      // تنسيق مماثل للطلاب
+      return Card(
+        elevation: 4,
+        margin: EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'معلومات الغياب والإجازة والهروب',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.teal,
+                    fontFamily: 'Cairo'),
+              ),
+              Divider(),
+              Text(
+                'عدد أيام الغياب: ${absenceData['absenceDays'] ?? 0}',
+                style: TextStyle(fontSize: 16, fontFamily: 'Cairo'),
+              ),
+              Text(
+                'عدد أيام الإجازة: ${absenceData['leaveDays'] ?? 0}',
+                style: TextStyle(fontSize: 16, fontFamily: 'Cairo'),
+              ),
+              Text(
+                'عدد أيام الهروب: ${absenceData['escapeDays'] ?? 0}',
+                style: TextStyle(fontSize: 16, fontFamily: 'Cairo'),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
   }
 
   Widget _buildInfoCard() {

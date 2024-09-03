@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 class ChatInterface extends StatefulWidget {
   final String conversationId;
   final String myUid;
+  final String myName;
   final String otherUserUid;
   final String otherUserName;
   final Function(String, String) onSendMessage;
@@ -35,6 +36,7 @@ class ChatInterface extends StatefulWidget {
     required this.loadMoreMessages,
     this.primaryColor = Colors.blue,
     this.secondaryColor = Colors.grey,
+    required this.myName,
   }) : super(key: key);
 
   @override
@@ -214,48 +216,71 @@ class _ChatInterfaceState extends State<ChatInterface> {
   Widget _buildMessageBubble(
       Map<String, dynamic> message, bool isMe, String messageId) {
     return GestureDetector(
-      onTap: () => _showMessageOptions(messageId),
+      onTap: isMe ? () => _showMessageOptions(messageId) : null,
       child: Container(
         margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        child: Row(
-          mainAxisAlignment:
-              isMe ? MainAxisAlignment.start : MainAxisAlignment.end,
+        child: Column(
+          crossAxisAlignment:
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-              decoration: BoxDecoration(
-                color: isMe ? widget.primaryColor : widget.secondaryColor,
-                borderRadius: BorderRadius.circular(20),
+            // إضافة اسم المرسل هنا
+            if (!isMe) // نعرض الاسم فقط للرسائل الواردة
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    message['senderName'] ?? '',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'Cairo-Medium',
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment:
-                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-                children: [
-                  _buildMessageContent(message),
-                  SizedBox(height: 5),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
+            Row(
+              mainAxisAlignment:
+                  isMe ? MainAxisAlignment.start : MainAxisAlignment.end,
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isMe ? widget.primaryColor : widget.secondaryColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: isMe
+                        ? CrossAxisAlignment.end
+                        : CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _formatTimestamp(message['timestamp']),
-                        style: TextStyle(
-                          color: isMe ? Colors.white70 : Colors.black54,
-                          fontSize: 10,
-                        ),
-                      ),
-                      if (isMe) SizedBox(width: 5),
-                      if (isMe)
-                        Text(
-                          _getMessageStatus(message['status']),
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
+                      _buildMessageContent(message),
+                      SizedBox(height: 5),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _formatTimestamp(message['timestamp']),
+                            style: TextStyle(
+                              color: isMe ? Colors.white70 : Colors.black54,
+                              fontSize: 10,
+                            ),
                           ),
-                        ),
+                          if (isMe) SizedBox(width: 5),
+                          if (isMe)
+                            Text(
+                              _getMessageStatus(message['status']),
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 10,
+                              ),
+                            ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

@@ -37,35 +37,23 @@ class _PointsPageState extends State<PointsPage> {
   }
 
   Future<void> _loadRemainingPoints() async {
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
+    final pointDoc = await FirebaseFirestore.instance
+        .collection('points')
         .doc(widget.myUid)
         .get();
 
-    if (userDoc.exists) {
-      final lastRefresh =
-          userDoc.data()?['lastPointsRefreshTime'] as Timestamp?;
-      final now = Timestamp.now();
+    if (pointDoc.exists) {
+      setState(() {
+        _remainingPoints = int.parse(pointDoc.data()?['available'] ?? '0');
+      });
+    }
+  }
 
-      if (lastRefresh == null ||
-          now.toDate().difference(lastRefresh.toDate()).inHours >= 24) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.myUid)
-            .update({
-          'remainingPoints': 4,
-          'lastPointsRefreshTime': now,
-        });
-        setState(() {
-          _remainingPoints = 4;
-          _nextRefreshTime = now.toDate().add(Duration(hours: 24));
-        });
-      } else {
-        setState(() {
-          _remainingPoints = userDoc.data()?['remainingPoints'] ?? 4;
-          _nextRefreshTime = lastRefresh.toDate().add(Duration(hours: 24));
-        });
-      }
+  String _getPointsDisplayMessage() {
+    if (_remainingPoints <= 0) {
+      return 'انتظر حتى اليوم التالي';
+    } else {
+      return 'النقاط المتاحة للمنح: $_remainingPoints';
     }
   }
 
@@ -156,9 +144,9 @@ class _PointsPageState extends State<PointsPage> {
   Future<void> _updateRemainingPoints(int pointsToDeduct) async {
     final newRemainingPoints = _remainingPoints - pointsToDeduct;
     await FirebaseFirestore.instance
-        .collection('users')
+        .collection('points')
         .doc(widget.myUid)
-        .update({'remainingPoints': newRemainingPoints});
+        .update({'available': newRemainingPoints.toString()});
 
     setState(() {
       _remainingPoints = newRemainingPoints;
@@ -195,7 +183,7 @@ class _PointsPageState extends State<PointsPage> {
   Future<void> _updatePoints(String userUid, dynamic currentPoints) async {
     if (_remainingPoints <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('لا يوجد نقاط متبقية للمنح اليوم')),
+        SnackBar(content: Text('لا يوجد نقاط متبقية للمنح')),
       );
       return;
     }
@@ -245,15 +233,9 @@ class _PointsPageState extends State<PointsPage> {
 
       await FirebaseFirestore.instance
           .collection('points')
-          .where('userUid', isEqualTo: userUid)
-          .where('schoolId', isEqualTo: widget.schoolId)
-          .get()
-          .then((querySnapshot) {
-        if (querySnapshot.docs.isNotEmpty) {
-          querySnapshot.docs.first.reference.update({
-            'points': (currentPointsInt + result).toString(),
-          });
-        }
+          .doc(userUid)
+          .update({
+        'points': (currentPointsInt + result).toString(),
       });
 
       await _updateRemainingPoints(result);
@@ -386,16 +368,19 @@ class _PointsPageState extends State<PointsPage> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.stars, color: Colors.amber),
+                  Icon(
+                    _remainingPoints > 0 ? Icons.stars : Icons.access_time,
+                    color: _remainingPoints > 0 ? Colors.amber : Colors.grey,
+                  ),
                   SizedBox(width: 8),
                   Text(
-                    _remainingPoints > 0
-                        ? 'النقاط المتبقية للمنح: $_remainingPoints'
-                        : 'الوقت المتبقي للتحديث: ${_getRemainingTime()}',
+                    _getPointsDisplayMessage(),
                     style: TextStyle(
                       fontSize: 14,
                       fontFamily: 'Cairo-Medium',
-                      color: Colors.blue[700],
+                      color: _remainingPoints > 0
+                          ? Colors.blue[700]
+                          : Colors.grey[600],
                     ),
                   ),
                 ],

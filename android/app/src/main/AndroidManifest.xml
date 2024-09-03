@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
-        android:label="to_users"
+        android:label="Electronic school"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

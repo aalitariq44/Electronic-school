@@ -32,7 +32,7 @@ class HomePageStudents extends StatefulWidget {
 
 class _HomePageStudentsState extends State<HomePageStudents> {
   final UpdateCheckerService _updateChecker = UpdateCheckerService(
-      currentVersion: '1.0.0'); // استبدل بإصدار تطبيقك الحالي
+      currentVersion: '1.1.0'); // استبدل بإصدار تطبيقك الحالي
 
   User? user = FirebaseAuth.instance.currentUser;
   String studentName = '';
@@ -597,6 +597,7 @@ class _HomePageStudentsState extends State<HomePageStudents> {
                                     otherUserName: 'الإجتماع',
                                     grade: studentGrade,
                                     section: studentSection,
+                                    myName: studentName,
                                   ),
                                 ),
                               );
@@ -612,6 +613,7 @@ class _HomePageStudentsState extends State<HomePageStudents> {
                                     myUid: myUid,
                                     otherUserUid: '',
                                     otherUserName: 'المناقشة',
+                                    myName: studentName,
                                   ),
                                 ),
                               );

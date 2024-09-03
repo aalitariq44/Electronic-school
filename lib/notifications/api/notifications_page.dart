@@ -3,13 +3,13 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:rxdart/rxdart.dart';
 
 class NotificationsPage extends StatelessWidget {
   final String myUid;
   final String schoolId;
 
-  const NotificationsPage(
-      {Key? key, required this.myUid, required this.schoolId})
+  const NotificationsPage({Key? key, required this.myUid, required this.schoolId})
       : super(key: key);
 
   Future<String> _getUserName(String uid) async {
@@ -83,11 +83,10 @@ class NotificationsPage extends StatelessWidget {
 
       QuerySnapshot schoolNotificationsSnapshot = await FirebaseFirestore
           .instance
-          .collection('notifications')
+          .collection('managementMessages')
           .doc(schoolId)
-          .collection('School Notifications')
-          .where('studentUid', isEqualTo: myUid)
-          .where('isRead', isEqualTo: false)
+          .collection('schoolMessages')
+          .where('studentSeenStatus.$myUid', isEqualTo: false)
           .get();
       count += schoolNotificationsSnapshot.docs.length;
 
@@ -97,10 +96,10 @@ class NotificationsPage extends StatelessWidget {
 
   Stream<QuerySnapshot> getSchoolNotifications() {
     return FirebaseFirestore.instance
-        .collection('notifications')
+        .collection('managementMessages')
         .doc(schoolId)
-        .collection('School Notifications')
-        .where('studentUid', isEqualTo: myUid)
+        .collection('schoolMessages')
+        .where('studentSeenStatus.$myUid', isNull: false)
         .snapshots();
   }
 
@@ -135,15 +134,14 @@ class NotificationsPage extends StatelessWidget {
     });
 
     FirebaseFirestore.instance
-        .collection('notifications')
+        .collection('managementMessages')
         .doc(schoolId)
-        .collection('School Notifications')
-        .where('studentUid', isEqualTo: myUid)
-        .where('isRead', isEqualTo: false)
+        .collection('schoolMessages')
+        .where('studentSeenStatus.$myUid', isEqualTo: false)
         .get()
         .then((snapshot) {
       for (var doc in snapshot.docs) {
-        doc.reference.update({'isRead': true});
+        doc.reference.update({'studentSeenStatus.$myUid': true});
       }
     });
 
@@ -190,52 +188,7 @@ class NotificationsPage extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('posts')
-                        .where('uid', isEqualTo: myUid)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                      if (snapshot.hasError) {
-                        return Center(
-                            child: Text('حدث خطأ: ${snapshot.error}'));
-                      }
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(child: Text('لا توجد إشعارات'));
-                      }
-
-                      List<Widget> notificationWidgets = [];
-
-                      for (var doc in snapshot.data!.docs) {
-                        var postData = doc.data() as Map<String, dynamic>;
-
-                        if (postData['likes'] != null) {
-                          var likes = postData['likes'] as Map<String, dynamic>;
-                          likes.forEach((userId, likeData) {
-                            notificationWidgets.add(_buildLikeNotification({
-                              'userId': userId,
-                              'timestamp': likeData['timestamp'],
-                            }));
-                          });
-                        }
-
-                        if (postData['comments'] != null) {
-                          for (var comment in postData['comments']) {
-                            notificationWidgets
-                                .add(_buildCommentNotification(comment));
-                          }
-                        }
-                      }
-
-                      notificationWidgets.add(_buildPointsNotifications());
-                      notificationWidgets.add(_buildSchoolNotifications());
-
-                      return ListView(children: notificationWidgets);
-                    },
-                  ),
+                  child: _buildAllNotifications(),
                 ),
               ],
             ),
@@ -245,166 +198,9 @@ class NotificationsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLikeNotification(Map<String, dynamic> like) {
-    return FutureBuilder<String>(
-      future: _getUserName(like['userId']),
-      builder: (context, userSnapshot) {
-        String userName = userSnapshot.data ?? 'جاري التحميل...';
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Icon(Icons.favorite, color: Colors.red, size: 24),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'أعجب $userName بمنشورك',
-                        style: TextStyle(fontFamily: 'Cairo-Medium'),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        _formatTimestamp(
-                            _convertToTimestamp(like['timestamp'])),
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCommentNotification(Map<String, dynamic> comment) {
-    return FutureBuilder<String>(
-      future: _getUserName(comment['userId']),
-      builder: (context, userSnapshot) {
-        String userName = userSnapshot.data ?? 'جاري التحميل...';
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-          child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.comment, color: Colors.blue, size: 24),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'علق $userName على منشورك:',
-                        style: TextStyle(fontFamily: 'Cairo-Medium'),
-                      ),
-                      SizedBox(height: 8),
-                      Text(comment['text']),
-                      SizedBox(height: 4),
-                      Text(
-                        _formatTimestamp(
-                            _convertToTimestamp(comment['timestamp'])),
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildPointsNotifications() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collection('points')
-          .doc(myUid)
-          .collection('transactions')
-          .where('type', isEqualTo: 'received')
-          .limit(10)
-          .snapshots(),
-      builder: (context, pointsSnapshot) {
-        if (pointsSnapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        if (pointsSnapshot.hasError) {
-          return Center(child: Text('حدث خطأ: ${pointsSnapshot.error}'));
-        }
-        if (!pointsSnapshot.hasData || pointsSnapshot.data!.docs.isEmpty) {
-          return SizedBox();
-        }
-
-        var transactions = pointsSnapshot.data!.docs;
-        transactions.sort((a, b) => _convertToTimestamp(b['timestamp'])
-            .compareTo(_convertToTimestamp(a['timestamp'])));
-
-        return Column(
-          children: transactions.map((transaction) {
-            var transactionData = transaction.data() as Map<String, dynamic>;
-            return FutureBuilder<String>(
-              future: _getUserName(transactionData['grantorUid']),
-              builder: (context, userSnapshot) {
-                String userName = userSnapshot.data ?? 'جاري التحميل...';
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(Icons.stars, color: Colors.amber, size: 24),
-                        SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'حصلت على نقاط من $userName',
-                                style: TextStyle(fontFamily: 'Cairo-Medium'),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                '${transactionData['points']} نقطة',
-                                style: TextStyle(
-                                  color: Colors.green,
-                                  fontFamily: 'Cairo-Medium',
-                                ),
-                              ),
-                              SizedBox(height: 4),
-                              Text(
-                                _formatTimestamp(_convertToTimestamp(
-                                    transactionData['timestamp'])),
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 12),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-
-  Widget _buildSchoolNotifications() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: getSchoolNotifications(),
+  Widget _buildAllNotifications() {
+    return StreamBuilder<List<Widget>>(
+      stream: _getAllNotificationsStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
@@ -412,55 +208,166 @@ class NotificationsPage extends StatelessWidget {
         if (snapshot.hasError) {
           return Center(child: Text('حدث خطأ: ${snapshot.error}'));
         }
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          return SizedBox();
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return Center(child: Text('لا توجد إشعارات'));
         }
 
-        var notifications = snapshot.data!.docs;
-        notifications.sort((a, b) => _convertToTimestamp(b['timestamp'])
-            .compareTo(_convertToTimestamp(a['timestamp'])));
-
-        return Column(
-          children: notifications.map((doc) {
-            var notificationData = doc.data() as Map<String, dynamic>;
-            return Card(
-              margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.notification_important,
-                        color: Colors.orange, size: 24),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            notificationData['title'],
-                            style: TextStyle(
-                                fontFamily: 'Cairo-Medium',
-                                fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(height: 4),
-                          Text(notificationData['content']),
-                          SizedBox(height: 4),
-                          Text(
-                            _formatTimestamp(_convertToTimestamp(
-                                notificationData['timestamp'])),
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        );
+        return ListView(children: snapshot.data!);
       },
+    );
+  }
+
+  Stream<List<Widget>> _getAllNotificationsStream() {
+    return Rx.combineLatest4(
+      getSchoolNotifications(),
+      _getPostNotificationsStream(),
+      _getPointsNotificationsStream(),
+      _getCommentNotificationsStream(),
+      (schoolNotifications, postNotifications, pointsNotifications, commentNotifications) {
+        List<Widget> allNotifications = [];
+        
+        // إضافة إشعارات المدرسة أولاً
+        allNotifications.addAll(_buildSchoolNotificationWidgets(schoolNotifications));
+        
+        // إضافة باقي الإشعارات
+        allNotifications.addAll(postNotifications);
+        allNotifications.addAll(pointsNotifications);
+        allNotifications.addAll(commentNotifications);
+        
+        // ترتيب الإشعارات حسب التاريخ
+        allNotifications.sort((a, b) {
+          DateTime timeA = (a.key as ValueKey<DateTime>).value;
+          DateTime timeB = (b.key as ValueKey<DateTime>).value;
+          return timeB.compareTo(timeA);
+        });
+        
+        return allNotifications;
+      },
+    );
+  }
+
+  Stream<List<Widget>> _getPostNotificationsStream() {
+    return FirebaseFirestore.instance
+        .collection('posts')
+        .where('uid', isEqualTo: myUid)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Widget> notifications = [];
+      for (var doc in snapshot.docs) {
+        var postData = doc.data() as Map<String, dynamic>;
+        if (postData['likes'] != null) {
+          var likes = postData['likes'] as Map<String, dynamic>;
+          for (var entry in likes.entries) {
+            String userName = await _getUserName(entry.key);
+            notifications.add(_buildNotificationWidget(
+              '$userName أعجب بمنشورك',
+              '',
+              _convertToTimestamp(entry.value['timestamp']).toDate(),
+              Icons.favorite,
+              Colors.red,
+            ));
+          }
+        }
+      }
+      return notifications;
+    });
+  }
+
+  Stream<List<Widget>> _getPointsNotificationsStream() {
+    return FirebaseFirestore.instance
+        .collection('points')
+        .doc(myUid)
+        .collection('transactions')
+        .where('type', isEqualTo: 'received')
+        .limit(10)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Widget> notifications = [];
+      for (var doc in snapshot.docs) {
+        var transactionData = doc.data();
+        String userName = await _getUserName(transactionData['grantorUid']);
+        notifications.add(_buildNotificationWidget(
+          'حصلت على نقاط من $userName',
+          '${transactionData['points']} نقطة',
+          _convertToTimestamp(transactionData['timestamp']).toDate(),
+          Icons.stars,
+          Colors.amber,
+        ));
+      }
+      return notifications;
+    });
+  }
+
+  Stream<List<Widget>> _getCommentNotificationsStream() {
+    return FirebaseFirestore.instance
+        .collection('posts')
+        .where('uid', isEqualTo: myUid)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Widget> notifications = [];
+      for (var doc in snapshot.docs) {
+        var postData = doc.data() as Map<String, dynamic>;
+        if (postData['comments'] != null) {
+          for (var comment in postData['comments']) {
+            String userName = await _getUserName(comment['userId']);
+            notifications.add(_buildNotificationWidget(
+              'علق $userName على منشورك',
+              comment['text'],
+              _convertToTimestamp(comment['timestamp']).toDate(),
+              Icons.comment,
+              Colors.blue,
+            ));
+          }
+        }
+      }
+      return notifications;
+    });
+  }
+
+  List<Widget> _buildSchoolNotificationWidgets(QuerySnapshot snapshot) {
+    return snapshot.docs.map((doc) {
+      var notificationData = doc.data() as Map<String, dynamic>;
+      return _buildNotificationWidget(
+        notificationData['title'],
+        notificationData['content'],
+        _convertToTimestamp(notificationData['timestamp']).toDate(),
+        Icons.school,
+        Colors.purple,
+      );
+    }).toList();
+  }
+
+  Widget _buildNotificationWidget(String title, String content, DateTime time, IconData icon, Color color) {
+    return Card(
+      key: ValueKey<DateTime>(time),
+      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: Padding(
+        padding: EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: color, size: 24),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: TextStyle(fontFamily: 'Cairo-Medium', )),
+                  if (content.isNotEmpty) ...[
+                    SizedBox(height: 4),
+                    Text(content),
+                  ],
+                  SizedBox(height: 4),
+                  Text(
+                    _formatTimestamp(Timestamp.fromDate(time)),
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

@@ -22,7 +22,20 @@ class UpdateCheckerService {
     debugPrint('الإصدار الحالي للتطبيق: $currentVersion');
     debugPrint('آخر إصدار متوفر في Firebase Remote Config: $latestVersion');
 
-    return latestVersion != currentVersion;
+    // مقارنة الإصدارات
+    List<int> currentParts = currentVersion.split('.').map(int.parse).toList();
+    List<int> latestParts = latestVersion.split('.').map(int.parse).toList();
+
+    for (int i = 0; i < currentParts.length && i < latestParts.length; i++) {
+      if (currentParts[i] < latestParts[i]) {
+        return true; // يحتاج إلى تحديث
+      } else if (currentParts[i] > latestParts[i]) {
+        return false; // الإصدار الحالي أحدث
+      }
+    }
+
+    // إذا وصلنا إلى هنا، فإما الإصدارات متطابقة أو أحدهما له أجزاء إضافية
+    return latestParts.length > currentParts.length;
   }
 
   void showUpdateDialog(BuildContext context) {
